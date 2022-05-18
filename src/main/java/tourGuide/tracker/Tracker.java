@@ -16,12 +16,14 @@ public class Tracker extends Thread {
 	private Logger logger = LoggerFactory.getLogger(Tracker.class);
 	private static final long trackingPollingInterval = TimeUnit.MINUTES.toSeconds(5);
 	private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+	//private final ExecutorService executorService = Executors.newFixedThreadPool(10000);
+	
 	private final TourGuideService tourGuideService;
 	private boolean stop = false;
 
 	public Tracker(TourGuideService tourGuideService) {
 		this.tourGuideService = tourGuideService;
-		
+		//soumet le tracker a un pool de thread
 		executorService.submit(this);
 	}
 	
@@ -45,7 +47,12 @@ public class Tracker extends Thread {
 			List<User> users = tourGuideService.getAllUsers();
 			logger.debug("Begin Tracker. Tracking " + users.size() + " users.");
 			stopWatch.start();
-			users.forEach(u -> tourGuideService.trackUserLocation(u));
+			
+			
+			//multi threading pour paralleliser le foreach			
+			//users.forEach(u -> tourGuideService.trackUserLocation(u));
+			users.parallelStream().forEach(u -> tourGuideService.trackUserLocation(u));
+			
 			stopWatch.stop();
 			logger.debug("Tracker Time Elapsed: " + TimeUnit.MILLISECONDS.toSeconds(stopWatch.getTime()) + " seconds."); 
 			stopWatch.reset();
